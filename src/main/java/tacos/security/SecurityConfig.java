@@ -1,7 +1,5 @@
 package tacos.security;
 
-import javax.sql.DataSource;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -15,20 +13,21 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-        .authorizeRequests()
+            .authorizeRequests()
             .antMatchers("/design", "/orders")
-                .access("hasRole('ROLE_USER')")
+            .access("hasRole('ROLE_USER')")
             .antMatchers("/", "/**").access("permitAll")
-        .and()
+            .and()
             .httpBasic();
     }
     
-    @Autowired
-    DataSource dataSource;
     
     @Override
-    public void configure(AuthenticationManagerBuilder auth) throws Exception {
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         /*
+        @Autowired
+        DataSource dataSource;
+        
         auth.inMemoryAuthentication()
                 .withUser("user1")
                 .password("{noop}password1")
@@ -37,7 +36,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .withUser("user2")
                 .password("{noop}password2")
                 .authorities("ROLE_USER");
-         */
         
         
         auth
@@ -50,5 +48,20 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                             "select username, authority from authorities " +
                             "where username = ?")
                     .passwordEncoder(new NoEncodingPasswordEncoder());
+         */
+        
+        auth
+            .ldapAuthentication()
+            .userSearchBase("ou=people")
+            .userSearchFilter("(uid={0})")
+            .groupSearchBase("ou=groups")
+            .groupSearchFilter("member={0}")
+            .contextSource()
+            .root("dc=tacocloud,dc=com")
+            .ldif("classpath:users.ldif")
+            .and()
+            .passwordCompare()
+            .passwordEncoder(new BCryptPasswordEncoder())
+            .passwordAttribute("userPasscode");
     }
 }
