@@ -2,11 +2,12 @@ package tacos.web.api;
 
 import java.util.Date;
 import java.util.List;
+import org.springframework.hateoas.RepresentationModel;
 import lombok.Getter;
 import tacos.Ingredient;
 import tacos.Taco;
 
-public class TacoResource extends ResourceSupport {
+public class TacoResource extends RepresentationModel {
     
     @Getter
     private final String name;
